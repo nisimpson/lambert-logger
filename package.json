@@ -19,14 +19,13 @@
     "size": "size-limit",
     "analyze": "size-limit --why"
   },
-  "peerDependencies": {},
   "husky": {
     "hooks": {
       "pre-commit": "tsdx lint"
     }
   },
   "prettier": {
-    "printWidth": 80,
+    "printWidth": 120,
     "semi": true,
     "singleQuote": true,
     "trailingComma": "es5"
@@ -44,12 +43,24 @@
       "limit": "10 KB"
     }
   ],
+  "peerDependencies": {
+    "winston": "^3.0.0"
+  },
   "devDependencies": {
     "@size-limit/preset-small-lib": "^4.11.0",
+    "@types/lodash": "^4.14.170",
+    "@types/verror": "^1.10.4",
     "husky": "^6.0.0",
     "size-limit": "^4.11.0",
     "tsdx": "^0.14.1",
     "tslib": "^2.2.0",
-    "typescript": "^4.3.2"
+    "typescript": "^4.3.2",
+    "verror": "^1.10.0"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
+    "winston": "^3.3.3",
+    "winston-transport": "^4.4.0"
   }
 }
