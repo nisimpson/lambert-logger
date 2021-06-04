@@ -19,7 +19,8 @@ const applyUserTransforms = (opts: ContainerOptionsPrivate): Logform.Format => {
 
 const stringifyMetadata = format((info, opts) => {
   const { timestamp, instance, ...rest } = info.metadata;
-  info.metadata.rest = isEmpty(rest) ? undefined : JSON.stringify({ ...rest }, null, opts.space || 0);
+  const { indent } = opts;
+  info.metadata.rest = isEmpty(rest) ? undefined : JSON.stringify({ ...rest }, null, indent);
   return info;
 });
 
@@ -30,7 +31,7 @@ const cloudwatchFormat: Formatter = (opts, hooks) =>
       splat(),
       format.metadata(),
       label({ label: opts.name }),
-      stringifyMetadata(),
+      stringifyMetadata({ indent: 0 }),
       printf(info => hooks.onLogFormat({ info })),
     ]
   );
@@ -43,7 +44,7 @@ const localFormat: Formatter = (opts, hooks) =>
       format.timestamp(),
       format.metadata(),
       label({ label: opts.name }),
-      stringifyMetadata({ space: 2 }),
+      stringifyMetadata({ indent: 2 }),
       format.colorize(),
       printf(info => hooks.onLogFormat({ info })),
     ]
