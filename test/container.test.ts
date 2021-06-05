@@ -35,5 +35,6 @@ describe('winston cloudwatch container', () => {
     logger.error(new Error("unwrapped error"));
     logger.error([new Error("wrapped error")]);
     logger.error([new VError(new Error("cause"), "wrapped with a cause")]);
+    logger.error("Some message text first", new Error("with an error splat"));
   });
 });

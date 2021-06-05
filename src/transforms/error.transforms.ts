@@ -28,7 +28,11 @@ export const prettyPrintErrors = (params: PrettyPrintErrorsOptions): UserTransfo
       }
     } else {
       // arguments might contain error objects; try to transform them.
-      opts.pack(info, { splat: splat.map(arg => transform(arg, params)) });
+      opts.pack(info, {
+        message: info.message,
+        splat: splat.map(arg => ({ error: transform(arg, params) })),
+      });
+      info.stack = undefined;
     }
     return info;
   };
