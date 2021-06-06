@@ -1,14 +1,16 @@
+import winston from 'winston';
 import VError from 'verror';
 import { create } from '../src/container';
 import { prettyPrintErrors, UserTransformFunction } from '../src/transforms';
 
 describe('winston cloudwatch container', () => {
   test('simple log', () => {
-    const { getLogger } = create({ name: 'cloudwatch', defaultMeta: { one: 'two' } });
+    const container = new winston.Container();
+    const { getLogger } = create(container, { name: 'cloudwatch', defaultMeta: { one: 'two' } });
     const logger = getLogger({ two: 'three' });
     logger.info('Testing!');
     logger.warn('Testing %s?', '1 2 3');
-    logger.warn('Testing?', ['1 2 3'], { foo: 'bar' });
+    logger.warn('Testing?', { foo: 'bar', arr: ['1 2 3'] });
   });
 
   test('user transforms', () => {
@@ -19,22 +21,24 @@ describe('winston cloudwatch container', () => {
       return info;
     };
 
-    const { getLogger } = create({ name: 'transforms', transforms: [addFoo] });
+    const container = new winston.Container();
+    const { getLogger } = create(container, { name: 'transforms', transforms: [addFoo] });
     const logger = getLogger();
     logger.info('Is there a foo?');
     logger.success('Is there a %s?', 'foo');
   });
 
   test('pretty print error transform', () => {
-    const { getLogger } = create({
+    const container = new winston.Container();
+    const { getLogger } = create(container, {
       name: 'pretty print errors',
       transforms: [prettyPrintErrors({ vErrorInfoFunc: err => VError.info(err) })],
     });
     const logger = getLogger();
-    logger.error("no error");
-    logger.error(new Error("unwrapped error"));
-    logger.error([new Error("wrapped error")]);
-    logger.error([new VError(new Error("cause"), "wrapped with a cause")]);
-    logger.error("Some message text first", new Error("with an error splat"));
+    logger.error('no error');
+    logger.error([new Error('wrapped error')]);
+    logger.error([new VError(new Error('cause'), 'wrapped with a cause')]);
+    logger.error('Some message text first', new Error('with an error splat'));
+    logger.error([new VError({ name: 'MockError', info: { foo: 'bar' } }, 'Mocked')]);
   });
 });

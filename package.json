@@ -30,6 +30,11 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
+  "jest": {
+    "setupFiles": [
+      "<rootDir>/.env-test.ts"
+    ]
+  },
   "name": "winston-cloudwatch",
   "author": "Nathan Simpson",
   "module": "dist/winston-cloudwatch.esm.js",

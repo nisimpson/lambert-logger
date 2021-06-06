@@ -1,6 +1,6 @@
 import winston from 'winston';
 import { createBase } from './base';
-import { ContainerOptions, ContainerOptionsPrivate } from './config';
+import { ContainerOptions, ContainerOptionsPrivate } from './types/config';
 
 // winston log configuration set levels
 const levels = {
@@ -15,16 +15,24 @@ const levels = {
 
 type CustomLogger = Record<keyof typeof levels, winston.LeveledLogMethod>;
 
+/** Winston logger suited for generating Cloudwatch log messages from AWS Lambda functions. */
 export type CloudwatchLogger = winston.Logger & CustomLogger;
 
-export interface CreateLoggerResult {
-  container: winston.Container;
+export interface CreateProfileResult {
+  /** Gets the default instance of the Cloudwatch logger. */
   getLogger: (options?: Record<string, unknown>) => CloudwatchLogger;
 }
 
-export function create(opts: ContainerOptions = {}): CreateLoggerResult {
-  const container = new winston.Container();
-
+/**
+ * Creates a new logger and transports for AWS lambda logging.
+ *
+ * @param opts The user configuration options.
+ * @returns An object containing the cloudwatch container and a logger factory function.
+ */
+export function create(
+  container: winston.Container,
+  opts: ContainerOptions = {},
+): CreateProfileResult {
   const options: ContainerOptionsPrivate = {
     // default options
     name: '',
@@ -41,6 +49,7 @@ export function create(opts: ContainerOptions = {}): CreateLoggerResult {
 
   const base = createBase(options);
 
+  // use hooks to build and configure logger
   const hooks = options.hooks
     ? {
         ...base,
@@ -56,10 +65,10 @@ export function create(opts: ContainerOptions = {}): CreateLoggerResult {
   const [...transports] = hooks.onSelectTransports({ record });
 
   // create default category
-  const logger = container.add('default', {
+  const logger = container.add('lambda', {
     levels,
     transports,
-    defaultMeta: options.defaultMeta
+    defaultMeta: options.defaultMeta,
   });
 
   // adjust/view logger
@@ -70,7 +79,6 @@ export function create(opts: ContainerOptions = {}): CreateLoggerResult {
   });
 
   return {
-    getLogger: options => container.get('default').child({ ...options }) as CloudwatchLogger,
-    container,
+    getLogger: options => container.get('lambda').child({ ...options }) as CloudwatchLogger,
   };
 }

@@ -1,21 +1,29 @@
 import _isError from 'lodash/isError';
-import { UserTransformFunction } from './config.transforms';
+import { UserTransformFunction } from './apply';
 import _isArray from 'lodash/isArray';
 
 export interface PrettyPrintErrorsOptions {
-  vErrorInfoFunc: (error: Error) => Record<string, unknown>;
+  /** The function that invokes the VError::info function on the specified error message. */
+  vErrorInfoFunc?: (error: Error) => Record<string, unknown>;
 }
 
 function transform(arg: unknown, opts: PrettyPrintErrorsOptions): unknown {
   return _isError(arg)
     ? {
         message: arg.message,
-        info: opts.vErrorInfoFunc(arg),
+        info: opts.vErrorInfoFunc?.call(null, arg),
         stack: arg.stack?.split('\n'),
       }
     : arg;
 }
 
+/**
+ * Attempts to transform error objects info a more readable format by splitting up stack strings.
+ * Supports verror library error objects.
+ *
+ * @param params The transform options.
+ * @returns A user transform function to add to the user configuration.
+ */
 export const prettyPrintErrors = (params: PrettyPrintErrorsOptions): UserTransformFunction => {
   return (info, opts) => {
     const { message, splat } = opts.unpack(info);

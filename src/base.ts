@@ -1,55 +1,84 @@
-import { ContainerEventHooks } from './hooks';
-import { ContainerOptionsPrivate } from './config';
+import { ContainerEventHooks } from './types/hooks';
+import { ContainerOptionsPrivate } from './types/config';
 import { transports, format, Logform } from 'winston';
-import { isEmpty } from 'lodash';
-import { createTransformOptions } from './transforms/config.transforms';
+import _omitBy from 'lodash/omitBy';
+import _isUndefined from 'lodash/isUndefined';
+import _isEmpty from 'lodash/isEmpty';
+import { applyUserTransforms } from './transforms/apply';
 
-const { STAGE, AWS_EXECUTION_ENV, NODE_ENV, CI } = process.env;
+const { STAGE, AWS_EXECUTION_ENV, NODE_ENV, CI, LOGGER_DEBUG } = process.env;
 
 const { combine, label, printf, splat } = format;
 
-type Formatter = (opts: ContainerOptionsPrivate, hooks: ContainerEventHooks) => Logform.Format;
-
-const applyUserTransforms = (opts: ContainerOptionsPrivate): Logform.Format => {
-  const { transforms } = opts;
-  const transformOpts = createTransformOptions(opts.transformOpts);
-  const formats = transforms.map(transform => format(transform)(transformOpts));
-  return combine(...formats);
-};
-
-const stringifyMetadata = format((info, opts) => {
-  const { timestamp, instance, ...rest } = info.metadata;
-  const { indent } = opts;
-  info.metadata.rest = isEmpty(rest) ? undefined : JSON.stringify({ ...rest }, null, indent);
+/** Format transform. Removes all undefined properties from the metadata object. */
+const omitUndefined = format(info => {
+  info.metadata = _omitBy(info.metadata, _isUndefined);
   return info;
 });
 
+/**
+ * Format transform. Wraps non specified metadata into a single object, 'rest', within the
+ * metadata object.
+ */
+const stringifyRest = format((info, opts) => {
+  const { label, timestamp, instance, ...rest } = info.metadata;
+  const { indent } = opts;
+  info.metadata.rest = _isEmpty(rest) ? undefined : JSON.stringify({ ...rest }, null, indent);
+  return info;
+});
+
+/**
+ * Format transform. Prints representation of info object to the console. For development use
+ * only.
+ */
+const printInfoToConsole = format(info => {
+  if (LOGGER_DEBUG) {
+    console.log('Log info:');
+    console.log(info);
+  }
+  return info;
+});
+
+type Formatter = (opts: ContainerOptionsPrivate, hooks: ContainerEventHooks) => Logform.Format;
+
+/** Console formatter used for AWS cloudwatch logs. */
 const cloudwatchFormat: Formatter = (opts, hooks) =>
   combine(
     ...[
       applyUserTransforms(opts),
       splat(),
-      format.metadata(),
       label({ label: opts.name }),
-      stringifyMetadata({ indent: 0 }),
+      format.metadata(),
+      omitUndefined(),
+      stringifyRest({ indent: 0 }),
+      printInfoToConsole(),
       printf(info => hooks.onLogFormat({ info })),
     ]
   );
 
+/** Console formatter used for local development, aka terminal console. */
 const localFormat: Formatter = (opts, hooks) =>
   combine(
     ...[
       applyUserTransforms(opts),
       splat(),
+      label({ label: opts.name }),
       format.timestamp(),
       format.metadata(),
-      label({ label: opts.name }),
-      stringifyMetadata({ indent: 2 }),
+      omitUndefined(),
+      stringifyRest({ indent: 2 }),
+      printInfoToConsole(),
       format.colorize(),
       printf(info => hooks.onLogFormat({ info })),
     ]
   );
 
+/**
+ * Creates the base functionality hooks for this logger container.
+ *
+ * @param opts The container configuration options.
+ * @returns A new {@link ContainerEventHooks} object for use in building the container.
+ */
 export const createBase = (opts: ContainerOptionsPrivate): ContainerEventHooks => {
   const result: ContainerEventHooks = {
     onCreateTransports(_options) {
@@ -112,11 +141,13 @@ export const createBase = (opts: ContainerOptionsPrivate): ContainerEventHooks =
       }
     },
 
+    // something like:
+    // [info][2021-06-05T15:47:10.591Z] Logger Name >> Hello, World! >> {some:'metadata'}
     onLogFormat: ({ info }) => {
-      const { instance, timestamp, rest } = info.metadata;
+      const { label, instance, timestamp, rest } = info.metadata;
       const header = timestamp
-        ? `[${info.level}][${timestamp}] ${info.label} ${opts.delimiter}`
-        : `[${info.level}] ${info.label} ${opts.delimiter}`;
+        ? `[${info.level}][${timestamp}] ${label} ${opts.delimiter}`
+        : `[${info.level}] ${label} ${opts.delimiter}`;
       const message = instance
         ? `${header} ${instance} ${opts.delimiter} ${info.message}`
         : `${header} ${info.message}`;
