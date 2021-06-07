@@ -1,6 +1,5 @@
 import VError from 'verror';
-import unit from '../src';
-import { lazyLogTransform, prettyPrintErrors, UserTransformFunction } from '../src/transforms';
+import unit, { UserTransformFunction, lazyLogTransform, prettyPrintErrorTransform } from '../src';
 
 describe('winston lambda logger', () => {
   test('simple log', () => {
@@ -28,7 +27,7 @@ describe('winston lambda logger', () => {
   test('pretty print error transform', () => {
     const { getLogger } = unit.create({
       name: 'pretty print errors',
-      transforms: [prettyPrintErrors({ vErrorInfoFunc: err => VError.info(err) })],
+      transforms: [prettyPrintErrorTransform({ vErrorInfoFunc: err => VError.info(err) })],
     });
     const logger = getLogger();
     logger.error('no error');
@@ -42,7 +41,7 @@ describe('winston lambda logger', () => {
     const { getLogger } = unit.create({
       name: 'lazy log',
       transforms: [lazyLogTransform()],
-      testLevel: 'debug'
+      testLevel: 'debug',
     });
     const logger = getLogger();
     const someFunction = jest.fn().mockReturnValue('Some string');

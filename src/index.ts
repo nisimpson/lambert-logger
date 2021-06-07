@@ -1,6 +1,7 @@
 import { create } from './logger';
 export * from './logger';
-export { ContainerOptions } from './types/config';
+export * from './transforms';
+export * from './types';
 
 export default {
   create,

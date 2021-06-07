@@ -1,5 +1,5 @@
-import { LoggerEventHooks } from './types/hooks';
-import { ContainerOptionsPrivate } from './types/config';
+import { LoggerEventHooks } from './types';
+import { ContainerOptionsPrivate } from './types.private';
 import { transports, format, Logform } from 'winston';
 import _omitBy from 'lodash/omitBy';
 import _isUndefined from 'lodash/isUndefined';

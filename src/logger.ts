@@ -1,6 +1,15 @@
 import winston, { Logger, Container } from 'winston';
 import { createBase } from './hooks';
-import { ContainerOptions, ContainerOptionsPrivate } from './types/config';
+import { ContainerOptionsPrivate } from './types.private';
+
+export interface CreateProfileResult {
+  container: Container;
+  /** Gets the default category of the lambda logger container. */
+  getLogger: (options?: Record<string, unknown>) => Logger;
+}
+
+/** User container configuration options. */
+export type ContainerOptions = Partial<ContainerOptionsPrivate>;
 
 // winston log configuration set levels
 const levels = {
@@ -11,12 +20,6 @@ const levels = {
   debug: 4,
   silly: 5,
 };
-
-export interface CreateProfileResult {
-  container: Container;
-  /** Gets the default category of the lambda logger container. */
-  getLogger: (options?: Record<string, unknown>) => Logger;
-}
 
 /**
  * Creates a new logger and transports for AWS lambda logging.

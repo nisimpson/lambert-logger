@@ -1,5 +1,5 @@
 import _isFunction from 'lodash/isFunction';
-import { UserTransformFunction } from './applyUserTransforms';
+import { UserTransformFunction } from './types';
 
 export function lazyLogTransform(): UserTransformFunction {
   return (info, opts) => {

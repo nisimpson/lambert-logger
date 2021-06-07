@@ -1,5 +1,5 @@
-import { LoggerEventHooksProvider } from './hooks';
-import { UserTransformFunction } from '../transforms';
+import { LoggerEventHooksProvider } from "./types";
+import { UserTransformFunction } from "./transforms/types";
 
 /** User container configuration options. */
 export interface ContainerOptionsPrivate {
@@ -18,6 +18,3 @@ export interface ContainerOptionsPrivate {
   /** Custom hooks used to extend or override base container functionality. Advanced use only. */
   hooks: LoggerEventHooksProvider | undefined;
 }
-
-/** User container configuration options. */
-export type ContainerOptions = Partial<ContainerOptionsPrivate>;
