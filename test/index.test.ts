@@ -1,10 +1,10 @@
 import VError from 'verror';
-import { create } from '../src/container';
+import unit from '../src';
 import { prettyPrintErrors, UserTransformFunction } from '../src/transforms';
 
-describe('winston cloudwatch container', () => {
+describe('winston lambda logger', () => {
   test('simple log', () => {
-    const { getLogger } = create({ name: 'cloudwatch', defaultMeta: { one: 'two' } });
+    const { getLogger } = unit.create({ name: 'lambda', defaultMeta: { one: 'two' } });
     const logger = getLogger({ two: 'three' });
     logger.info('Testing!');
     logger.warn('Testing %s?', '1 2 3');
@@ -19,14 +19,14 @@ describe('winston cloudwatch container', () => {
       return info;
     };
 
-    const { getLogger } = create({ name: 'transforms', transforms: [addFoo] });
+    const { getLogger } = unit.create({ name: 'transforms', transforms: [addFoo] });
     const logger = getLogger();
     logger.info('Is there a foo?');
-    logger.success('Is there a %s?', 'foo');
+    logger.verbose('Is there a %s?', 'foo');
   });
 
   test('pretty print error transform', () => {
-    const { getLogger } = create({
+    const { getLogger } = unit.create({
       name: 'pretty print errors',
       transforms: [prettyPrintErrors({ vErrorInfoFunc: err => VError.info(err) })],
     });

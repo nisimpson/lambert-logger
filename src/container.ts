@@ -1,4 +1,4 @@
-import winston from 'winston';
+import winston, { Logger, Container } from 'winston';
 import { createBase } from './base';
 import { ContainerOptions, ContainerOptionsPrivate } from './types/config';
 
@@ -7,20 +7,15 @@ const levels = {
   error: 0,
   warn: 1,
   info: 2,
-  success: 3,
-  verbose: 4,
-  debug: 5,
-  silly: 6,
+  verbose: 3,
+  debug: 4,
+  silly: 5,
 };
 
-type CustomLogger = Record<keyof typeof levels, winston.LeveledLogMethod>;
-
-/** Winston logger suited for generating Cloudwatch log messages from AWS Lambda functions. */
-export type CloudwatchLogger = winston.Logger & CustomLogger;
-
 export interface CreateProfileResult {
-  /** Gets the default instance of the Cloudwatch logger. */
-  getLogger: (options?: Record<string, unknown>) => CloudwatchLogger;
+  container: Container;
+  /** Gets the default category of the lambda logger container. */
+  getLogger: (options?: Record<string, unknown>) => Logger;
 }
 
 /**
@@ -61,10 +56,9 @@ export function create(opts: ContainerOptions = {}): CreateProfileResult {
   const record = hooks.onCreateTransports({});
   const [...transports] = hooks.onSelectTransports({ record });
 
-  const container = new winston.Container();
-
   // create default category
-  const logger = container.add('lambda', {
+  const container = new Container();
+  const logger = container.add('default', {
     levels,
     transports,
     defaultMeta: options.defaultMeta,
@@ -78,6 +72,7 @@ export function create(opts: ContainerOptions = {}): CreateProfileResult {
   });
 
   return {
-    getLogger: options => container.get('lambda').child({ ...options }) as CloudwatchLogger,
+    container,
+    getLogger: options => logger.child({ ...options }),
   };
 }
