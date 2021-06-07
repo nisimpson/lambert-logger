@@ -1,5 +1,5 @@
 import winston, { Logger, Container } from 'winston';
-import { createBase } from './base';
+import { createBase } from './hooks';
 import { ContainerOptions, ContainerOptionsPrivate } from './types/config';
 
 // winston log configuration set levels

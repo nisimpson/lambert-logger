@@ -32,24 +32,24 @@ export interface LogFormatOptions extends OptionsBase {
   info: Logform.TransformableInfo;
 }
 
-type ContainerEventHook<T, U = void> = (options: T) => U;
+type LoggerEventHook<T, U = void> = (options: T) => U;
 
 /** A set of function that are invoked during specific events within the logger's lifetime. */
-export interface ContainerEventHooks {
+export interface LoggerEventHooks {
   /**
    * Invoked when the container builds transport objects to be used by the logger.
    *
    * @param options the event hook options.
    * @returns A transport record, containing one or more transport instances.
    */
-  onCreateTransports: ContainerEventHook<CreateTransportOptions, TransportRecord>;
+  onCreateTransports: LoggerEventHook<CreateTransportOptions, TransportRecord>;
   /**
    * Invoked when the container requests a collection of transports to be used by the logger.
    *
    * @param options the event hook options.
    * @returns A collection of transport instances to be passed into the logger.
    */
-  onSelectTransports: ContainerEventHook<SelectTransportOptions, transport[]>;
+  onSelectTransports: LoggerEventHook<SelectTransportOptions, transport[]>;
   /**
    * Invoked when the container requests foreground/background colors associated with
    * each log level.
@@ -57,14 +57,14 @@ export interface ContainerEventHooks {
    * @param options the event hook options.
    * @returns An object containing the log level colors.
    */
-  onSelectColors: ContainerEventHook<SelectColorOptions, config.AbstractConfigSetColors>;
+  onSelectColors: LoggerEventHook<SelectColorOptions, config.AbstractConfigSetColors>;
   /**
    * Invoked when the logger has been created and added to the container. This logger and
    * its children will be provided via both the container and the getLogger factory function.
    *
    * @param options the event hook options.
    */
-  onLoggerCreated: ContainerEventHook<LoggerCreatedOptions>;
+  onLoggerCreated: LoggerEventHook<LoggerCreatedOptions>;
   /**
    * Invoked when the logger has applied all transforms, and will write to the target log level
    * and transform.
@@ -72,7 +72,7 @@ export interface ContainerEventHooks {
    * @param options the event hook options.
    * @returns The string that will be written to the log.
    */
-  onLogFormat: ContainerEventHook<LogFormatOptions, string>;
+  onLogFormat: LoggerEventHook<LogFormatOptions, string>;
 }
 
 /**
@@ -91,4 +91,4 @@ export interface ContainerEventHooks {
  *
  * @param base The event hook container for the default configuration.
  */
-export type ContainerEventHooksProvider = (base: ContainerEventHooks) => Partial<ContainerEventHooks>;
+export type LoggerEventHooksProvider = (base: LoggerEventHooks) => Partial<LoggerEventHooks>;

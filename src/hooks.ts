@@ -1,10 +1,10 @@
-import { ContainerEventHooks } from './types/hooks';
+import { LoggerEventHooks } from './types/hooks';
 import { ContainerOptionsPrivate } from './types/config';
 import { transports, format, Logform } from 'winston';
 import _omitBy from 'lodash/omitBy';
 import _isUndefined from 'lodash/isUndefined';
 import _isEmpty from 'lodash/isEmpty';
-import { applyUserTransforms } from './transforms/apply';
+import { applyUserTransforms } from './transforms/applyUserTransforms';
 
 const { STAGE, AWS_EXECUTION_ENV, NODE_ENV, CI, LOGGER_DEBUG } = process.env;
 
@@ -39,7 +39,7 @@ const printInfoToConsole = format(info => {
   return info;
 });
 
-type Formatter = (opts: ContainerOptionsPrivate, hooks: ContainerEventHooks) => Logform.Format;
+type Formatter = (opts: ContainerOptionsPrivate, hooks: LoggerEventHooks) => Logform.Format;
 
 /** Console formatter used for AWS cloudwatch logs. */
 const cloudwatchFormat: Formatter = (opts, hooks) =>
@@ -79,8 +79,8 @@ const localFormat: Formatter = (opts, hooks) =>
  * @param opts The container configuration options.
  * @returns A new {@link ContainerEventHooks} object for use in building the container.
  */
-export const createBase = (opts: ContainerOptionsPrivate): ContainerEventHooks => {
-  const result: ContainerEventHooks = {
+export const createBase = (opts: ContainerOptionsPrivate): LoggerEventHooks => {
+  const result: LoggerEventHooks = {
     onCreateTransports(_options) {
       return {
         // production code: minimal, informational, warning, and error logging
@@ -97,7 +97,6 @@ export const createBase = (opts: ContainerOptionsPrivate): ContainerEventHooks =
         }),
         // noisiest, anything goes style logging
         local: new transports.Console({
-          level: 'silly',
           handleExceptions: true,
           format: localFormat(opts, this),
         }),

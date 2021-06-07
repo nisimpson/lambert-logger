@@ -1,5 +1,5 @@
 import _isError from 'lodash/isError';
-import { UserTransformFunction } from './apply';
+import { UserTransformFunction } from './applyUserTransforms';
 import _isArray from 'lodash/isArray';
 
 export interface PrettyPrintErrorsOptions {

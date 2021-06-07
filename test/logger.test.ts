@@ -1,6 +1,6 @@
 import VError from 'verror';
 import unit from '../src';
-import { prettyPrintErrors, UserTransformFunction } from '../src/transforms';
+import { lazyLogTransform, prettyPrintErrors, UserTransformFunction } from '../src/transforms';
 
 describe('winston lambda logger', () => {
   test('simple log', () => {
@@ -36,5 +36,20 @@ describe('winston lambda logger', () => {
     logger.error([new VError(new Error('cause'), 'wrapped with a cause')]);
     logger.error('Some message text first', new Error('with an error splat'));
     logger.error([new VError({ name: 'MockError', info: { foo: 'bar' } }, 'Mocked')]);
+  });
+
+  test('lazy log transform', () => {
+    const { getLogger } = unit.create({
+      name: 'lazy log',
+      transforms: [lazyLogTransform()],
+      testLevel: 'debug'
+    });
+    const logger = getLogger();
+    const someFunction = jest.fn().mockReturnValue('Some string');
+    expect(logger.level).toBe('debug');
+    logger.debug(() => ['This is a lazy log']);
+    logger.debug(() => ['This is %s', 'also a lazy log']);
+    logger.silly(() => ['This log wont show up, though. The function also wont get invoked.', someFunction()]);
+    expect(someFunction).not.toBeCalled();
   });
 });
