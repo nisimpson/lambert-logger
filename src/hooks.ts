@@ -6,7 +6,7 @@ import _isUndefined from 'lodash/isUndefined';
 import _isEmpty from 'lodash/isEmpty';
 import { applyUserTransforms } from './transforms/applyUserTransforms';
 
-const { STAGE, AWS_EXECUTION_ENV, NODE_ENV, CI, LOGGER_DEBUG } = process.env;
+const { AWS_EXECUTION_ENV, NODE_ENV, CI, LOGGER_DEBUG } = process.env;
 
 const { combine, label, printf, splat } = format;
 
@@ -116,8 +116,8 @@ export const createBase = (opts: ContainerOptionsPrivate): LoggerEventHooks => {
     onSelectTransports: ({ record }) => {
       // If running on AWS...
       if (AWS_EXECUTION_ENV) {
-        switch (STAGE) {
-          case 'prod':
+        switch (NODE_ENV) {
+          case 'production':
             // ...only send high priority logs
             return [record.production];
           default:
