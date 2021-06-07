@@ -1,6 +1,6 @@
 # winston-cloudwatch
 
-This library generates pre-configured loggers from the wonderful [winston logger](https://github.com/winstonjs/winston), formatted and optimized for AWS cloudwatch.
+A simple configuration tool for the wonderful [winston logger](https://github.com/winstonjs/winston). Formats and Optimizes for AWS lambda log writing.
 
 ## Table of Contents
 
@@ -19,7 +19,7 @@ This library generates pre-configured loggers from the wonderful [winston logger
 
 ```javascript
 // src/logging.js
-import factory from 'winston-lambda';
+import factory from 'winston-serverless';
 
 const { getLogger } = factory.create({ name: "My Lambda" });
 
@@ -40,7 +40,7 @@ logger.info('Hello, World!'); // [info] My Lambda >> Hello, World!
 Before you can begin logging, you must first create a new Logger factory function for your application:
 
 ```javascript
-import factory from 'winston-lambda';
+import factory from 'winston-serverless';
 
 const getLogger = factory.create(config); // config is optional; see customization
 ```
@@ -81,22 +81,15 @@ logger.warn("127.0.0.1 - there's no place like home");
 logger.error("127.0.0.1 - there's no place like home");
 ```
 
-Out of the box, the logger library filters log messages by level. The runtime environment determines the appropriate filter:
+Out of the box, the logger library filters log messages by level. The runtime environment and `NODE_ENV` variable determine the target transport:
 
-| environment | minimum log level |
-| ----------- | ----------------- |
-| default         | `silly` |
-| AWS Development | `debug` |
-| AWS Production  | `success` |
+| environment | minimum log level | running on AWS? | node env |
+| ----------- | ----------------- | --------------- | -------- |
+| Local (default) | `silly` | `no` | `*` |
+| AWS Development | `debug` | `yes` | `development` |
+| AWS Production  | `success` | `yes` | `production` |
 
-#### Lazy Logging
-
-Certain logging levels are filtered from the stream, dependent upon the environment in which the application is currently executing in (production, development, etc). However, arguments passed into the log function are still evaluated, which may have a performance impact during runtime. If filtered log messages are affecting runtime performance, consider using the `lazy` version of the log level functions:
-
-```javascript
-// if the application is running in production, the supplied lambda will not be invoked.
-logger.lazy.debug(log => log("Noisy configuration settings: ", collectConfig()));
-```
+> AWS lambda NodeJS runtimes do not define NODE_ENV automatically. The environment must be set via lambda configuration or otherwise.
 
 ### Configuration
 
@@ -106,7 +99,7 @@ Customize the logging factory by passing in an object to the `create` function w
 
 - `name`: Name to prepend to each log statement. Defaults to `Service`.
 - `defaultMeta`: Object containing arbitrary information to include along every log message. See [winston documentation](https://github.com/winstonjs/winston#streams-objectmode-and-info-objects) for details.
-- `testLevel`: Determines the lowest priority allowed during a test run. Defaults to `'error'`.
+- `testLevel`: Determines the lowest priority allowed during a local or CI test run. Defaults to `'error'`.
 - `delimiter`: Delimiter between the name and the log message. Defaults to `>>`.
 - `transforms`: Functions to format log statements before they are written. See [User Transforms](#user-transforms) section for details.
 - `transformOpts`: Custom options accessible to all user transforms in the transforms list when provoked.
@@ -131,39 +124,33 @@ Likewise, logger instances can be configured by passing in an object to the fact
 Transform functions allow you to transform log messages before they are written to the stream. You can add transforms by passing in a list to the factory configuration:
 
 ```javascript
-const redactSecrets = (info, opts) => {
+const lazyLogTransform = () => {
   //
-  // context parameter provides:
+  // user transform parameters:
   // - info: winston log transformable info
   // - opts: object containing helper functions and global transform options
   //
-  const { splat } = opts.unpack(info);
-    splat.forEach(arg => {
-    if (arg.hasOwnProperty('secret')) {
-      arg['secret'] = '********'
+  return (info, opts) => {
+    // extract message and splat from info object
+    const { message } = opts.unpack(info);
+    if (_isFunction(message)) {
+      const [format, ...rest] = message();
+      // update info object with message and splat arguments
+      opts.pack(info, { message: format, splat: rest });
     }
-  });
-  return info;
+    return info;
+  };
 };
 
-const deepCopy = (context, next) => {
-  const { splat } = opts.unpack(info);
-  // Use Lodash to deep clone and prevent side effects
-  const cloned = _.cloneDeep(splat);
-  opts.pack(info, { splat: cloned });
-  return info;
-};
+const getLogger = factory.create({ name: "Example", transforms: [lazyLogTransform()] });
+const logger = getLogger();
 
-const getLogger = factory.create({ name: "Example", transforms: [deepCopy, redactSecrets] });
-const log = getLogger();
-
-// [info] Example >> Received data: { foo: "bar", secret: "********" }
-log.info("Received data: ", { foo: "bar", secret: "my-secret" });
+// [info] Example >> Payload info >> { ... }
+logger.info(() => ['Payload info', getPayload()]);
 ```
 
 ## Development
 
-- Please see the [repository README](/README.md) for how to contribute as a developer, bug reporter, or maintainer.
 - The library uses TSDX to manage configuration, builds, and publishing. If you plan on contributing as a developer, check out TSDX's documentation [here](https://tsdx.io).
 
 ### Commands

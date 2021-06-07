@@ -14,6 +14,7 @@
     "start": "tsdx watch",
     "build": "tsdx build",
     "test": "tsdx test",
+    "test:clear": "tsdx test --clearCache",
     "lint": "tsdx lint",
     "prepare": "tsdx build",
     "size": "size-limit",
@@ -35,16 +36,16 @@
       "<rootDir>/.env-test.ts"
     ]
   },
-  "name": "winston-cloudwatch",
+  "name": "winston-lambda",
   "author": "Nathan Simpson",
-  "module": "dist/winston-cloudwatch.esm.js",
+  "module": "dist/winston-lambda-esm.js",
   "size-limit": [
     {
-      "path": "dist/winston-cloudwatch.cjs.production.min.js",
+      "path": "dist/winston-lambda-cjs.production.min.js",
       "limit": "10 KB"
     },
     {
-      "path": "dist/winston-cloudwatch.esm.js",
+      "path": "dist/winston-lambda-esm.js",
       "limit": "10 KB"
     }
   ],

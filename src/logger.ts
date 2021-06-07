@@ -32,7 +32,7 @@ export function create(opts: ContainerOptions = {}): CreateProfileResult {
     // default options
     name: '',
     delimiter: '>>',
-    testLevel: 'silly',
+    testLevel: 'error',
     defaultMeta: {},
     transforms: [],
     transformOpts: {},
