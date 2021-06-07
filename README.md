@@ -85,9 +85,10 @@ Out of the box, the logger library filters log messages by level. The runtime en
 
 | environment | minimum log level | running on AWS? | node env |
 | ----------- | ----------------- | --------------- | -------- |
-| Local (default) | `silly` | `no` | `*` |
-| AWS Development | `debug` | `yes` | `development` |
-| AWS Production  | `success` | `yes` | `production` |
+| Local (default) | `silly` | no | `*` |
+| AWS Production  | `success` | yes | `production` |
+| AWS Development | `debug` | yes | `*` |
+
 
 > AWS lambda NodeJS runtimes do not define NODE_ENV automatically. The environment must be set via lambda configuration or otherwise.
 
