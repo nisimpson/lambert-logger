@@ -1,4 +1,4 @@
-# winston-serverless
+# winston-lambda
 
 A simple configuration tool for the wonderful [winston logger](https://github.com/winstonjs/winston). Formats and Optimizes for AWS lambda log writing.
 
@@ -19,7 +19,7 @@ A simple configuration tool for the wonderful [winston logger](https://github.co
 
 ```javascript
 // src/logging.js
-import factory from 'winston-serverless';
+import factory from 'winston-lambda';
 
 const { getLogger } = factory.create({ name: "My Lambda" });
 
@@ -40,7 +40,7 @@ logger.info('Hello, World!'); // [info] My Lambda >> Hello, World!
 Before you can begin logging, you must first create a new Logger factory function for your application:
 
 ```javascript
-import factory from 'winston-serverless';
+import factory from 'winston-lambda';
 
 const getLogger = factory.create(config); // config is optional; see customization
 ```
