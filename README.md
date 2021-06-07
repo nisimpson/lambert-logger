@@ -1,4 +1,4 @@
-# winston-cloudwatch
+# winston-serverless
 
 A simple configuration tool for the wonderful [winston logger](https://github.com/winstonjs/winston). Formats and Optimizes for AWS lambda log writing.
 
