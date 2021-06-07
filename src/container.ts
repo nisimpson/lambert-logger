@@ -29,10 +29,7 @@ export interface CreateProfileResult {
  * @param opts The user configuration options.
  * @returns An object containing the cloudwatch container and a logger factory function.
  */
-export function create(
-  container: winston.Container,
-  opts: ContainerOptions = {},
-): CreateProfileResult {
+export function create(opts: ContainerOptions = {}): CreateProfileResult {
   const options: ContainerOptionsPrivate = {
     // default options
     name: '',
@@ -63,6 +60,8 @@ export function create(
   // create logger transports (console, http, file, etc.)
   const record = hooks.onCreateTransports({});
   const [...transports] = hooks.onSelectTransports({ record });
+
+  const container = new winston.Container();
 
   // create default category
   const logger = container.add('lambda', {
