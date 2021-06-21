@@ -1,15 +1,16 @@
-import winston, { Logger, Container } from 'winston';
-import { createBase } from './hooks';
-import { ContainerOptionsPrivate } from './types.private';
+import { Logger, Container } from 'winston';
+import { createBaseHooks } from './hooks';
+import { LoggerContainerOptions } from './types';
 
 export interface CreateProfileResult {
-  container: Container;
+  /** Gets the default logger. */
+  logger: Logger;
   /** Gets the default category of the lambda logger container. */
-  getLogger: (options?: Record<string, unknown>) => Logger;
+  getLogger: (name?: string, options?: Record<string, unknown>) => Logger;
 }
 
 /** User container configuration options. */
-export type ContainerOptions = Partial<ContainerOptionsPrivate>;
+export type CreateOptions = Partial<LoggerContainerOptions>;
 
 // winston log configuration set levels
 const levels = {
@@ -27,11 +28,11 @@ const levels = {
  * @param opts The user configuration options.
  * @returns An object containing the cloudwatch container and a logger factory function.
  */
-export function create(opts: ContainerOptions = {}): CreateProfileResult {
-  const options: ContainerOptionsPrivate = {
+export function create(opts: CreateOptions = {}): CreateProfileResult {
+  const options: LoggerContainerOptions = {
     // default options
     name: '',
-    delimiter: '>>',
+    delimiter: '|',
     testLevel: 'error',
     defaultMeta: {},
     transforms: [],
@@ -42,26 +43,22 @@ export function create(opts: ContainerOptions = {}): CreateProfileResult {
     ...opts,
   };
 
-  const base = createBase(options);
+  const baseHooks = createBaseHooks(options);
 
   // use hooks to build and configure logger
   const hooks = options.hooks
     ? {
-        ...base,
-        ...options.hooks(base),
+        ...baseHooks,
+        ...options.hooks(baseHooks),
       }
-    : base;
-
-  const colors = hooks.onSelectColors({});
-  winston.addColors(colors);
+    : baseHooks;
 
   // create logger transports (console, http, file, etc.)
   const record = hooks.onCreateTransports({});
   const [...transports] = hooks.onSelectTransports({ record });
 
   // create default category
-  const container = new Container();
-  const logger = container.add('default', {
+  const logger = new Container().add('default', {
     levels,
     transports,
     defaultMeta: options.defaultMeta,
@@ -70,12 +67,11 @@ export function create(opts: ContainerOptions = {}): CreateProfileResult {
   // adjust/view logger
   hooks.onLoggerCreated({
     levels,
-    colors,
     logger,
   });
 
   return {
-    container,
-    getLogger: options => logger.child({ ...options }),
+    logger,
+    getLogger: (name, options) => logger.child({ ...options, instance: name }),
   };
 }

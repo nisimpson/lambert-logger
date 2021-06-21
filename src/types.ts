@@ -1,4 +1,14 @@
-import { Logger, Logform, config, transport } from 'winston';
+import { config, Logform, Logger, transport } from 'winston';
+import { UserTransformFunction } from './transforms/types';
+
+export interface Levels<Type> {
+  error: Type;
+  warn: Type;
+  info: Type;
+  verbose: Type;
+  debug: Type;
+  silly: Type;
+}
 
 /** A key/value pair of strings to associated winston Transport instances. */
 export type TransportRecord = Record<string, transport>;
@@ -14,12 +24,8 @@ export interface SelectTransportOptions extends OptionsBase {
   record: TransportRecord;
 }
 
-/** Color selection event hook options. */
-export interface SelectColorOptions extends OptionsBase {}
-
 /** Logger created event hook options. */
 export interface LoggerCreatedOptions extends OptionsBase {
-  colors: config.AbstractConfigSetColors;
   levels: config.AbstractConfigSetLevels;
   logger: Logger;
 }
@@ -50,14 +56,7 @@ export interface LoggerEventHooks {
    * @returns A collection of transport instances to be passed into the logger.
    */
   onSelectTransports: LoggerEventHook<SelectTransportOptions, transport[]>;
-  /**
-   * Invoked when the container requests foreground/background colors associated with
-   * each log level.
-   *
-   * @param options the event hook options.
-   * @returns An object containing the log level colors.
-   */
-  onSelectColors: LoggerEventHook<SelectColorOptions, config.AbstractConfigSetColors>;
+
   /**
    * Invoked when the logger has been created and added to the container. This logger and
    * its children will be provided via both the container and the getLogger factory function.
@@ -92,3 +91,21 @@ export interface LoggerEventHooks {
  * @param base The event hook container for the default configuration.
  */
 export type LoggerEventHooksProvider = (base: LoggerEventHooks) => Partial<LoggerEventHooks>;
+
+/** User container configuration options. */
+export interface LoggerContainerOptions {
+  /** The logger name. Defaults to 'Service'. */
+  name: string;
+  /** Characters to use between log message items. Defaults to '>>'. */
+  delimiter: string;
+  /** Base level to appear during unit testing. Defaults to 'silly'. */
+  testLevel: string;
+  /** Key/value pair of properties to be printed with every log message. */
+  defaultMeta: Record<string, unknown>;
+  /** A collection of user transforms to manuplate log messages before they are written. */
+  transforms: UserTransformFunction[];
+  /** Custom options accessible to all user transforms in the transforms list when provoked. */
+  transformOpts: Record<string, unknown>;
+  /** Custom hooks used to extend or override base container functionality. Advanced use only. */
+  hooks: LoggerEventHooksProvider | undefined;
+}

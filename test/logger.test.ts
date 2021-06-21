@@ -3,8 +3,8 @@ import unit, { UserTransformFunction, lazyLogTransform, prettyPrintErrorTransfor
 
 describe('winston lambda logger', () => {
   test('simple log', () => {
-    const { getLogger } = unit.create({ name: 'lambda', defaultMeta: { one: 'two' } });
-    const logger = getLogger({ two: 'three' });
+    const { getLogger } = unit.create({ name: 'lambda', defaultMeta: { one: 'two' }, testLevel: 'debug' });
+    const logger = getLogger('child-logger', { two: 'three' });
     logger.info('Testing!');
     logger.warn('Testing %s?', '1 2 3');
     logger.warn('Testing?', { foo: 'bar', arr: ['1 2 3'] });
@@ -18,7 +18,7 @@ describe('winston lambda logger', () => {
       return info;
     };
 
-    const { getLogger } = unit.create({ name: 'transforms', transforms: [addFoo] });
+    const { getLogger } = unit.create({ name: 'transforms', transforms: [addFoo], testLevel: 'debug' });
     const logger = getLogger();
     logger.info('Is there a foo?');
     logger.verbose('Is there a %s?', 'foo');
@@ -28,6 +28,7 @@ describe('winston lambda logger', () => {
     const { getLogger } = unit.create({
       name: 'pretty print errors',
       transforms: [prettyPrintErrorTransform({ vErrorInfoFunc: err => VError.info(err) })],
+      testLevel: 'debug'
     });
     const logger = getLogger();
     logger.error('no error');
@@ -51,4 +52,14 @@ describe('winston lambda logger', () => {
     logger.silly(() => ['This log wont show up, though. The function also wont get invoked.', someFunction()]);
     expect(someFunction).not.toBeCalled();
   });
+
+  test('log level override', () => {
+    process.env.LOGGER_LEVEL = 'warn';
+    const { logger } = unit.create({
+      name: 'Log Override',
+      testLevel: 'debug'
+    });
+    logger.debug("You can't see this.");
+    logger.warn("But you can see this.");
+  })
 });
