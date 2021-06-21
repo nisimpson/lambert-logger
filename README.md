@@ -1,4 +1,4 @@
-# winston-lambda
+# lambert-logger
 
 A simple configuration tool for the wonderful [winston logger](https://github.com/winstonjs/winston). Formats and Optimizes for AWS lambda log writing.
 
@@ -19,9 +19,9 @@ A simple configuration tool for the wonderful [winston logger](https://github.co
 
 ```javascript
 // src/logging.js
-import factory from 'winston-lambda';
+import Lambert from 'lambert-logger';
 
-const { getLogger } = factory.create({ name: "My Lambda" });
+const { getLogger } = Lambert.create({ name: "My Lambda" });
 
 export default getLogger;
 
@@ -40,9 +40,9 @@ logger.info('Hello, World!'); // [info] My Lambda >> Hello, World!
 Before you can begin logging, you must first create a new Logger factory function for your application:
 
 ```javascript
-import factory from 'winston-lambda';
+import Lambert from 'lambert-logger';
 
-const getLogger = factory.create(config); // config is optional; see customization
+const { getLogger } = Lambert.create(config); // config is optional; see customization
 ```
 
 Use the factory function to generate logger instances, and use those instances to generate log messages.
@@ -113,7 +113,7 @@ Likewise, logger instances can be configured by passing in an object to the fact
 - `name`: Optional name of the logger instance. Used to identify log messages generated from specific modules in your application.
 
   ```javascript
-  const getLogger = factory.create({ name: "My Lambda" });
+  const { getLogger } = Lambert.create({ name: "My Lambda" });
   const log = getLogger({ name: "Submodule" });
 
   // [info] My Lambda >> Submodule >> All systems go!
@@ -143,7 +143,7 @@ const lazyLogTransform = () => {
   };
 };
 
-const getLogger = factory.create({ name: "Example", transforms: [lazyLogTransform()] });
+const { getLogger } = Lambert.create({ name: "Example", transforms: [lazyLogTransform()] });
 const logger = getLogger();
 
 // [info] Example >> Payload info >> { ... }
