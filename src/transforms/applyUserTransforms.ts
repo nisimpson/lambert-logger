@@ -9,7 +9,7 @@ const symbol = (key: string): string => {
 };
 
 /** Gets the splat data from the information object. */
-const splat = (info: Logform.TransformableInfo): unknown[] => {
+export const extractSplat = (info: Logform.TransformableInfo): unknown[] => {
   const args = info[symbol('splat')] as unknown[];
   return args ?? [];
 };
@@ -28,7 +28,7 @@ const setMessage = (info: Record<string, unknown>, value: unknown): void => {
 const createTransformOptions = (props: Record<string, unknown>): UserTransformOptions => ({
   ...props,
   unpack: info => ({
-    splat: splat(info),
+    splat: extractSplat(info),
     message: info.message,
   }),
   pack: (info, extracted) => {

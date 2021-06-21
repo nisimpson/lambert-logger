@@ -10,6 +10,12 @@ describe('winston lambda logger', () => {
     logger.warn('Testing?', { foo: 'bar', arr: ['1 2 3'] });
   });
 
+  test('simple array', () => {
+    const { getLogger } = unit.create({ name: 'lambda', defaultMeta: { one: 'two' }, testLevel: 'debug' });
+    const logger = getLogger('child-logger', { two: 'three' });
+    logger.warn('Testing array:', { data: [{ foo: 'bar' }] });
+  });
+
   test('user transforms', () => {
     const addFoo: transforms.UserTransformFunction = (info, opts) => {
       const { splat } = opts.unpack(info);
@@ -28,7 +34,7 @@ describe('winston lambda logger', () => {
     const { getLogger } = unit.create({
       name: 'pretty print errors',
       transforms: [transforms.prettyPrintErrors({ vErrorInfoFunc: err => VError.info(err) })],
-      testLevel: 'debug'
+      testLevel: 'debug',
     });
     const logger = getLogger();
     logger.error('no error');
@@ -57,9 +63,9 @@ describe('winston lambda logger', () => {
     process.env.LOGGER_LEVEL = 'warn';
     const { logger } = unit.create({
       name: 'Log Override',
-      testLevel: 'debug'
+      testLevel: 'debug',
     });
     logger.debug("You can't see this.");
-    logger.warn("But you can see this.");
-  })
+    logger.warn('But you can see this.');
+  });
 });

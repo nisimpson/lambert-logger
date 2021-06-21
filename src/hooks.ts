@@ -1,8 +1,9 @@
 import chalk, { Chalk } from 'chalk';
+import _isArray from 'lodash/isArray';
 import _isEmpty from 'lodash/isEmpty';
 import _isUndefined from 'lodash/isUndefined';
 import _omitBy from 'lodash/omitBy';
-import { format, Logform, transports } from 'winston';
+import { createLogger, format, Logform, transports } from 'winston';
 import { applyUserTransforms } from './transforms/applyUserTransforms';
 import { Levels, LoggerContainerOptions, LoggerEventHooks } from './types';
 
@@ -10,9 +11,32 @@ type Formatter = (opts: LoggerContainerOptions, hooks: LoggerEventHooks) => Logf
 
 const { combine, label, printf, splat } = format;
 
+const internal = createLogger({
+  silent: true,
+  level: 'debug',
+  transports: [
+    new transports.Console({
+      format: combine(splat(), format.simple()),
+    }),
+  ],
+});
+
+const debug = (message: string, ...meta: unknown[]) => internal.debug(chalk.red(message), meta);
+
+const allowInternalLogging = format((info, opts) => {
+  if (opts.enabled) {
+    internal.silent = false;
+    debug('Logger debug active');
+  }
+  return info;
+});
+
 /** Format transform. Removes all undefined properties from the metadata object. */
 const stripUndefinedKeys = format(info => {
+  debug('begin strip undefined keys');
+  debug('info before: %o', info);
   info.metadata = _omitBy(info.metadata, _isUndefined);
+  debug('info after: %o', info);
   return info;
 });
 
@@ -21,11 +45,15 @@ const stripUndefinedKeys = format(info => {
  * metadata object.
  */
 const stringifyMetadata = format((info, opts) => {
+  debug('begin stringify metadata');
   const { indent, enabled } = opts;
   if (enabled) {
+    debug('info before: %o', info);
     const { label, timestamp, instance, ...rest } = info.metadata;
     info.metadata.rest = _isEmpty(rest) ? undefined : JSON.stringify({ ...rest }, null, indent);
+    debug('info after: %o', info);
   }
+  debug('end stringify metadata');
   return info;
 });
 
@@ -50,13 +78,14 @@ const formatAsJson = format((info, opts) => {
  */
 const formatStandard = format((info, opts) => {
   if (opts.enabled) {
+    const bold = chalk.bold;
     const colors: Levels<Chalk> = {
-      error: chalk.bold.red,
-      warn: chalk.bold.keyword('orange'),
-      info: chalk.bold.blue,
-      verbose: chalk.bold.green,
-      debug: chalk.bold.green,
-      silly: chalk.keyword('purple'),
+      error: bold.red,
+      warn: bold.keyword('orange'),
+      info: bold.blue,
+      verbose: bold.green,
+      debug: bold.green,
+      silly: bold.keyword('purple'),
     };
 
     const { label, instance, timestamp, rest } = info.metadata;
@@ -80,18 +109,6 @@ const formatStandard = format((info, opts) => {
   return info;
 });
 
-/**
- * Format transform. Prints representation of info object to the console. For development use
- * only.
- */
-const printInfoToConsole = format((info, opts) => {
-  if (opts.enabled) {
-    console.log('Log info:');
-    console.log(info);
-  }
-  return info;
-});
-
 /** Console formatter used for AWS cloudwatch logs. */
 const cloudwatchFormat: Formatter = (opts, hooks) =>
   combine(
@@ -101,7 +118,6 @@ const cloudwatchFormat: Formatter = (opts, hooks) =>
       label({ label: opts.name }),
       format.metadata(),
       stripUndefinedKeys(),
-      printInfoToConsole({ enabled: process.env.LOGGER_DEBUG }),
       formatAsJson({ enabled: true }),
       printf(info => hooks.onLogFormat({ info })),
     ]
@@ -111,6 +127,7 @@ const cloudwatchFormat: Formatter = (opts, hooks) =>
 const localFormat: Formatter = (opts, hooks) =>
   combine(
     ...[
+      allowInternalLogging({ enabled: process.env.LOGGER_DEBUG }),
       applyUserTransforms(opts),
       splat(),
       label({ label: opts.name }),
@@ -118,7 +135,6 @@ const localFormat: Formatter = (opts, hooks) =>
       format.metadata(),
       stripUndefinedKeys(),
       stringifyMetadata({ enabled: true, indent: 2 }),
-      printInfoToConsole({ enabled: process.env.LOGGER_DEBUG }),
       formatStandard({ enabled: true, delimiter: opts.delimiter }),
       printf(info => hooks.onLogFormat({ info })),
     ]
