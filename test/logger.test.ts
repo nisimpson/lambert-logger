@@ -1,5 +1,5 @@
 import VError from 'verror';
-import unit, { UserTransformFunction, lazyLogTransform, prettyPrintErrorTransform } from '../src';
+import unit, { transforms } from '../src';
 
 describe('winston lambda logger', () => {
   test('simple log', () => {
@@ -11,7 +11,7 @@ describe('winston lambda logger', () => {
   });
 
   test('user transforms', () => {
-    const addFoo: UserTransformFunction = (info, opts) => {
+    const addFoo: transforms.UserTransformFunction = (info, opts) => {
       const { splat } = opts.unpack(info);
       splat.push({ foo: 'yes!' });
       opts.pack(info, { splat });
@@ -27,7 +27,7 @@ describe('winston lambda logger', () => {
   test('pretty print error transform', () => {
     const { getLogger } = unit.create({
       name: 'pretty print errors',
-      transforms: [prettyPrintErrorTransform({ vErrorInfoFunc: err => VError.info(err) })],
+      transforms: [transforms.prettyPrintErrors({ vErrorInfoFunc: err => VError.info(err) })],
       testLevel: 'debug'
     });
     const logger = getLogger();
@@ -41,7 +41,7 @@ describe('winston lambda logger', () => {
   test('lazy log transform', () => {
     const { getLogger } = unit.create({
       name: 'lazy log',
-      transforms: [lazyLogTransform()],
+      transforms: [transforms.lazyLogging()],
       testLevel: 'debug',
     });
     const logger = getLogger();

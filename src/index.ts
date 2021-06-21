@@ -1,8 +1,8 @@
 import { create } from './logger';
 export * from './logger';
-export * from './transforms';
+export * as transforms from './transforms';
 export * from './types';
 
 export default {
-  create,
+  create
 };

@@ -24,7 +24,7 @@ function transform(arg: unknown, opts: PrettyPrintErrorsOptions): unknown {
  * @param params The transform options.
  * @returns A user transform function to add to the user configuration.
  */
-export const prettyPrintErrorTransform = (params: PrettyPrintErrorsOptions): UserTransformFunction => {
+export const prettyPrintErrors = (params: PrettyPrintErrorsOptions): UserTransformFunction => {
   return (info, opts) => {
     const { message, splat } = opts.unpack(info);
     if (splat.length === 0 && _isArray(message)) {

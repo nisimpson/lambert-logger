@@ -1,5 +1,5 @@
 {
-  "version": "0.2.1",
+  "version": "0.1.0",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -36,20 +36,20 @@
       "<rootDir>/.env-test.ts"
     ]
   },
-  "name": "winston-lambda",
+  "name": "lambert-logger",
   "author": "Nathan Simpson",
   "publishConfig": {
     "access": "public"
   },
-  "module": "dist/winston-lambda-esm.js",
+  "module": "dist/lambert-logger.esm.js",
   "size-limit": [
     {
-      "path": "dist/winston-lambda-cjs.production.min.js",
-      "limit": "10 KB"
+      "path": "dist/lambert-logger.cjs.production.min.js",
+      "limit": "20 KB"
     },
     {
-      "path": "dist/winston-lambda-esm.js",
-      "limit": "10 KB"
+      "path": "dist/lambert-logger.esm.js",
+      "limit": "20 KB"
     }
   ],
   "peerDependencies": {

@@ -1,6 +1,6 @@
 import { format, Logform } from 'winston';
+import { LoggerContainerOptions } from '../types';
 import { UserTransformOptions } from './types';
-import { ContainerOptionsPrivate } from '../types.private';
 
 /** Gets the symbol object refrenced by the specified key. */
 const symbol = (key: string): string => {
@@ -49,7 +49,7 @@ const createTransformOptions = (props: Record<string, unknown>): UserTransformOp
  * @param opts User configuration options.
  * @returns A winston log format function to pass into a winston transport formatter.
  */
-export const applyUserTransforms = (opts: ContainerOptionsPrivate): Logform.Format => {
+export const applyUserTransforms = (opts: LoggerContainerOptions): Logform.Format => {
   const { transforms } = opts;
   const transformOpts = createTransformOptions(opts.transformOpts);
   const formats = transforms.map(format).map(wrapped => wrapped(transformOpts));
